@@ -1,6 +1,6 @@
 version: '3'
-# MSA Laradock ith Node.Js: https://github.com/bagart/laradock-multi
-#  docker-compose -f docker-compose.multi.yml up -d laravel-fpm dashboard api-fpm nginx
+# MSA Laradock with Node.Js: https://github.com/bagart/laradock-multi
+# docker-compose -f docker-compose.multi.yml up -d bagrt-bot-tg-fpm dashboard api-fpm nginx
 
 networks:
   frontend:
@@ -14,6 +14,8 @@ volumes:
   redis:
     driver: ${VOLUMES_DRIVER}
   mariadb:
+    driver: ${VOLUMES_DRIVER}
+  docker-in-docker:
     driver: ${VOLUMES_DRIVER}
 #  elasticsearch:
 #    driver: ${VOLUMES_DRIVER}
@@ -35,12 +37,12 @@ services:
         #- ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
 
         # multi projects
-        - ${APP_CODE_PATH_HOST}/${PROJECT_LARAVEL}${PROJECT_LARAVEL_WEB_ROOT}:${APP_CODE_PATH_CONTAINER}/${PROJECT_LARAVEL}${PROJECT_LARAVEL_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
+        - ${APP_CODE_PATH_HOST}/${PROJECT_BAGRTBOTTG}${PROJECT_BAGRTBOTTG_WEB_ROOT}:${APP_CODE_PATH_CONTAINER}/${PROJECT_BAGRTBOTTG}${PROJECT_BAGRTBOTTG_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
         - ${APP_CODE_PATH_HOST}/${PROJECT_API}${PROJECT_API_WEB_ROOT}:${APP_CODE_PATH_CONTAINER}/${PROJECT_API}${PROJECT_API_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
         - ${APP_CODE_PATH_HOST}/${PROJECT_DASHBOARD}${PROJECT_DASHBOARD_WEB_ROOT}:${APP_CODE_PATH_CONTAINER}/${PROJECT_DASHBOARD}${PROJECT_DASHBOARD_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
 
         # default php-fpm service. It's LaraDock depends by default
-        - ${APP_CODE_PATH_HOST}/${PROJECT_DEFAULT}:${APP_CODE_PATH_CONTAINER}/${PROJECT_DEFAULT_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
+        - ${APP_CODE_PATH_HOST}/${PROJECT_DEFAULT}/${PROJECT_DEFAULT_WEB_ROOT}:/var/www/public/${PROJECT_DEFAULT_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
         #use custom mount of /etc/nginx/sites-available for switch-off laradock php-fpm default container
         - ${NGINX_SITES_PATH}:/etc/nginx/sites-available:ro
 
@@ -50,12 +52,13 @@ services:
       ports:
         - "${NGINX_HOST_HTTP_PORT}:80"
         - "${NGINX_HOST_HTTPS_PORT}:443"
+        - "${VARNISH_BACKEND_PORT}:81"
       depends_on:
-        - ${PROJECT_LARAVEL}-fpm
+        - ${PROJECT_BAGRTBOTTG}-fpm
         - ${PROJECT_API}-fpm
         - ${PROJECT_DASHBOARD}
         #use custom mount of /etc/nginx/sites-available for switch-off laradock php-fpm default container
-        - php-fpm
+        - php-fpm # default
       networks:
         - frontend
         - backend
@@ -65,16 +68,19 @@ services:
         context: ./workspace
         args:
           - CHANGE_SOURCE=${CHANGE_SOURCE}
+          - SHELL_OH_MY_ZSH=${SHELL_OH_MY_ZSH}
           - LARADOCK_PHP_VERSION=${PROJECT_API_PHP_VERSION}
           - UBUNTU_SOURCE=${UBUNTU_SOURCE}
+          - BASE_IMAGE_TAG_PREFIX=${WORKSPACE_BASE_IMAGE_TAG_PREFIX}
           - LARADOCK_PHALCON_VERSION=${PHALCON_VERSION}
           - INSTALL_SUBVERSION=${WORKSPACE_INSTALL_SUBVERSION}
+          - INSTALL_BZ2=${WORKSPACE_INSTALL_BZ2}
+          - INSTALL_GMP=${WORKSPACE_INSTALL_GMP}
           - INSTALL_XDEBUG=${WORKSPACE_INSTALL_XDEBUG}
           - INSTALL_PCOV=${WORKSPACE_INSTALL_PCOV}
           - INSTALL_PHPDBG=${WORKSPACE_INSTALL_PHPDBG}
           - INSTALL_BLACKFIRE=${INSTALL_BLACKFIRE}
           - INSTALL_SSH2=${WORKSPACE_INSTALL_SSH2}
-          - INSTALL_GMP=${WORKSPACE_INSTALL_GMP}
           - INSTALL_SOAP=${WORKSPACE_INSTALL_SOAP}
           - INSTALL_XSL=${WORKSPACE_INSTALL_XSL}
           - INSTALL_LDAP=${WORKSPACE_INSTALL_LDAP}
@@ -89,6 +95,7 @@ services:
           - NVM_NODEJS_ORG_MIRROR=${WORKSPACE_NVM_NODEJS_ORG_MIRROR}
           - INSTALL_NODE=${WORKSPACE_INSTALL_NODE}
           - NPM_REGISTRY=${WORKSPACE_NPM_REGISTRY}
+          - INSTALL_PNPM=${WORKSPACE_INSTALL_PNPM}
           - INSTALL_YARN=${WORKSPACE_INSTALL_YARN}
           - INSTALL_NPM_GULP=${WORKSPACE_INSTALL_NPM_GULP}
           - INSTALL_NPM_BOWER=${WORKSPACE_INSTALL_NPM_BOWER}
@@ -127,9 +134,10 @@ services:
           - INSTALL_SSHPASS=${WORKSPACE_INSTALL_SSHPASS}
           - INSTALL_INOTIFY=${WORKSPACE_INSTALL_INOTIFY}
           - INSTALL_FSWATCH=${WORKSPACE_INSTALL_FSWATCH}
-          - INSTALL_AST=${PROJECT_API_WORKSPACE_INSTALL_AST}
+          - INSTALL_AST=${WORKSPACE_INSTALL_AST}
           - INSTALL_YAML=${WORKSPACE_INSTALL_YAML}
           - INSTALL_MAILPARSE=${WORKSPACE_INSTALL_MAILPARSE}
+          - INSTALL_GIT_PROMPT=${WORKSPACE_INSTALL_GIT_PROMPT}
           - PUID=${WORKSPACE_PUID}
           - PGID=${WORKSPACE_PGID}
           - CHROME_DRIVER_VERSION=${WORKSPACE_CHROME_DRIVER_VERSION}
@@ -143,6 +151,7 @@ services:
           - INSTALL_POWERLINE=${WORKSPACE_INSTALL_POWERLINE}
           - INSTALL_SUPERVISOR=${WORKSPACE_INSTALL_SUPERVISOR}
           - INSTALL_FFMPEG=${WORKSPACE_INSTALL_FFMPEG}
+          - INSTALL_WKHTMLTOPDF=${WORKSPACE_INSTALL_WKHTMLTOPDF}
           - INSTALL_GNU_PARALLEL=${WORKSPACE_INSTALL_GNU_PARALLEL}
           - http_proxy
           - https_proxy
@@ -171,8 +180,11 @@ services:
         context: ./php-fpm
         args:
           - CHANGE_SOURCE=${CHANGE_SOURCE}
+          - BASE_IMAGE_TAG_PREFIX=${PHP_FPM_BASE_IMAGE_TAG_PREFIX}
           - LARADOCK_PHP_VERSION=${PROJECT_API_PHP_VERSION}
           - LARADOCK_PHALCON_VERSION=${PHALCON_VERSION}
+          - INSTALL_BZ2=${PHP_FPM_INSTALL_BZ2}
+          - INSTALL_GMP=${PHP_FPM_INSTALL_GMP}
           - INSTALL_XDEBUG=${PHP_FPM_INSTALL_XDEBUG}
           - INSTALL_PCOV=${PHP_FPM_INSTALL_PCOV}
           - INSTALL_PHPDBG=${PHP_FPM_INSTALL_PHPDBG}
@@ -188,7 +200,6 @@ services:
           - INSTALL_GEARMAN=${PHP_FPM_INSTALL_GEARMAN}
           - INSTALL_MSSQL=${PHP_FPM_INSTALL_MSSQL}
           - INSTALL_BCMATH=${PHP_FPM_INSTALL_BCMATH}
-          - INSTALL_GMP=${PHP_FPM_INSTALL_GMP}
           - INSTALL_PHPREDIS=${PHP_FPM_INSTALL_PHPREDIS}
           - INSTALL_MEMCACHED=${PHP_FPM_INSTALL_MEMCACHED}
           - INSTALL_OPCACHE=${PHP_FPM_INSTALL_OPCACHE}
@@ -251,21 +262,24 @@ services:
       links:
         - docker-in-docker
 
-    laravel:
+    bagrt-bot-tg:
       build:
         context: ./workspace
         args:
           - CHANGE_SOURCE=${CHANGE_SOURCE}
-          - LARADOCK_PHP_VERSION=${PROJECT_LARAVEL_PHP_VERSION}
+          - SHELL_OH_MY_ZSH=${SHELL_OH_MY_ZSH}
+          - LARADOCK_PHP_VERSION=${PROJECT_BAGRTBOTTG_PHP_VERSION}
           - UBUNTU_SOURCE=${UBUNTU_SOURCE}
+          - BASE_IMAGE_TAG_PREFIX=${WORKSPACE_BASE_IMAGE_TAG_PREFIX}
           - LARADOCK_PHALCON_VERSION=${PHALCON_VERSION}
           - INSTALL_SUBVERSION=${WORKSPACE_INSTALL_SUBVERSION}
+          - INSTALL_BZ2=${WORKSPACE_INSTALL_BZ2}
+          - INSTALL_GMP=${WORKSPACE_INSTALL_GMP}
           - INSTALL_XDEBUG=${WORKSPACE_INSTALL_XDEBUG}
           - INSTALL_PCOV=${WORKSPACE_INSTALL_PCOV}
           - INSTALL_PHPDBG=${WORKSPACE_INSTALL_PHPDBG}
           - INSTALL_BLACKFIRE=${INSTALL_BLACKFIRE}
           - INSTALL_SSH2=${WORKSPACE_INSTALL_SSH2}
-          - INSTALL_GMP=${WORKSPACE_INSTALL_GMP}
           - INSTALL_SOAP=${WORKSPACE_INSTALL_SOAP}
           - INSTALL_XSL=${WORKSPACE_INSTALL_XSL}
           - INSTALL_LDAP=${WORKSPACE_INSTALL_LDAP}
@@ -280,6 +294,7 @@ services:
           - NVM_NODEJS_ORG_MIRROR=${WORKSPACE_NVM_NODEJS_ORG_MIRROR}
           - INSTALL_NODE=${WORKSPACE_INSTALL_NODE}
           - NPM_REGISTRY=${WORKSPACE_NPM_REGISTRY}
+          - INSTALL_PNPM=${WORKSPACE_INSTALL_PNPM}
           - INSTALL_YARN=${WORKSPACE_INSTALL_YARN}
           - INSTALL_NPM_GULP=${WORKSPACE_INSTALL_NPM_GULP}
           - INSTALL_NPM_BOWER=${WORKSPACE_INSTALL_NPM_BOWER}
@@ -318,9 +333,10 @@ services:
           - INSTALL_SSHPASS=${WORKSPACE_INSTALL_SSHPASS}
           - INSTALL_INOTIFY=${WORKSPACE_INSTALL_INOTIFY}
           - INSTALL_FSWATCH=${WORKSPACE_INSTALL_FSWATCH}
-          - INSTALL_AST=${PROJECT_LARAVEL_WORKSPACE_INSTALL_AST}
+          - INSTALL_AST=${WORKSPACE_INSTALL_AST}
           - INSTALL_YAML=${WORKSPACE_INSTALL_YAML}
           - INSTALL_MAILPARSE=${WORKSPACE_INSTALL_MAILPARSE}
+          - INSTALL_GIT_PROMPT=${WORKSPACE_INSTALL_GIT_PROMPT}
           - PUID=${WORKSPACE_PUID}
           - PGID=${WORKSPACE_PGID}
           - CHROME_DRIVER_VERSION=${WORKSPACE_CHROME_DRIVER_VERSION}
@@ -334,36 +350,50 @@ services:
           - INSTALL_POWERLINE=${WORKSPACE_INSTALL_POWERLINE}
           - INSTALL_SUPERVISOR=${WORKSPACE_INSTALL_SUPERVISOR}
           - INSTALL_FFMPEG=${WORKSPACE_INSTALL_FFMPEG}
+          - INSTALL_WKHTMLTOPDF=${WORKSPACE_INSTALL_WKHTMLTOPDF}
           - INSTALL_GNU_PARALLEL=${WORKSPACE_INSTALL_GNU_PARALLEL}
           - http_proxy
           - https_proxy
           - no_proxy
       volumes:
-        - ${APP_CODE_PATH_HOST}/${PROJECT_LARAVEL}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+        - ${APP_CODE_PATH_HOST}/${PROJECT_BAGRTBOTTG}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+        - docker-in-docker:/certs/client
         - ./php-worker/supervisord.d:/etc/supervisord.d
-        - ./xdebug.ini:/etc/php/${PROJECT_LARAVEL_PHP_VERSION}/cli/conf.d/z-xdebug.ini
+        - ./xdebug.ini:/etc/php/${PROJECT_BAGRTBOTTG_PHP_VERSION}/cli/conf.d/z-xdebug.ini
       extra_hosts:
         - "dockerhost:${DOCKER_HOST_IP}"
 #      ports:
 #        - "${WORKSPACE_SSH_PORT}:22"
+#        - "${WORKSPACE_BROWSERSYNC_HOST_PORT}:3000"
+#        - "${WORKSPACE_BROWSERSYNC_UI_HOST_PORT}:3001"
+#        - "${WORKSPACE_VUE_CLI_SERVE_HOST_PORT}:8080"
+#        - "${WORKSPACE_VUE_CLI_UI_HOST_PORT}:8000"
+#        - "${WORKSPACE_ANGULAR_CLI_SERVE_HOST_PORT}:4200"
       tty: true
       environment:
-        - PHP_IDE_CONFIG=serverName=${PROJECT_LARAVEL}-workspace
+        - PHP_IDE_CONFIG=serverName=${PROJECT_BAGRTBOTTG}-workspace
+        - DOCKER_HOST=tcp://docker-in-docker:2376
+        - DOCKER_TLS_VERIFY=1
+        - DOCKER_TLS_CERTDIR=/certs
+        - DOCKER_CERT_PATH=/certs/client
         # autostart xdebug session on php-cli
         #- XDEBUG_CONFIG=xdebug.remote_autostart=1
-        - DOCKER_HOST=tcp://docker-in-docker:2375
       networks:
         - frontend
         - backend
       links:
         - docker-in-docker
-    laravel-fpm:
+
+    bagrt-bot-tg-fpm:
       build:
         context: ./php-fpm
         args:
           - CHANGE_SOURCE=${CHANGE_SOURCE}
-          - LARADOCK_PHP_VERSION=${PROJECT_LARAVEL_PHP_VERSION}
+          - BASE_IMAGE_TAG_PREFIX=${PHP_FPM_BASE_IMAGE_TAG_PREFIX}
+          - LARADOCK_PHP_VERSION=${PROJECT_BAGRTBOTTG_PHP_VERSION}
           - LARADOCK_PHALCON_VERSION=${PHALCON_VERSION}
+          - INSTALL_BZ2=${PHP_FPM_INSTALL_BZ2}
+          - INSTALL_GMP=${PHP_FPM_INSTALL_GMP}
           - INSTALL_XDEBUG=${PHP_FPM_INSTALL_XDEBUG}
           - INSTALL_PCOV=${PHP_FPM_INSTALL_PCOV}
           - INSTALL_PHPDBG=${PHP_FPM_INSTALL_PHPDBG}
@@ -379,7 +409,6 @@ services:
           - INSTALL_GEARMAN=${PHP_FPM_INSTALL_GEARMAN}
           - INSTALL_MSSQL=${PHP_FPM_INSTALL_MSSQL}
           - INSTALL_BCMATH=${PHP_FPM_INSTALL_BCMATH}
-          - INSTALL_GMP=${PHP_FPM_INSTALL_GMP}
           - INSTALL_PHPREDIS=${PHP_FPM_INSTALL_PHPREDIS}
           - INSTALL_MEMCACHED=${PHP_FPM_INSTALL_MEMCACHED}
           - INSTALL_OPCACHE=${PHP_FPM_INSTALL_OPCACHE}
@@ -414,6 +443,7 @@ services:
           - INSTALL_PCNTL=${PHP_FPM_INSTALL_PCNTL}
           - ADDITIONAL_LOCALES=${PHP_FPM_ADDITIONAL_LOCALES}
           - INSTALL_FFMPEG=${PHP_FPM_FFMPEG}
+          - INSTALL_WKHTMLTOPDF=${PHP_FPM_INSTALL_WKHTMLTOPDF}
           - INSTALL_XHPROF=${PHP_FPM_INSTALL_XHPROF}
           - PUID=${PHP_FPM_PUID}
           - PGID=${PHP_FPM_PGID}
@@ -422,9 +452,9 @@ services:
           - https_proxy
           - no_proxy
       volumes:
-        - ./php-fpm/php${PROJECT_LARAVEL_PHP_VERSION}.ini:/usr/local/etc/php/php.ini
-        - ${APP_CODE_PATH_HOST}/${PROJECT_LARAVEL}:${APP_CODE_PATH_CONTAINER}/${PROJECT_LARAVEL}${APP_CODE_CONTAINER_FLAG}
-
+        - ./php-fpm/php${PROJECT_BAGRTBOTTG_PHP_VERSION}.ini:/usr/local/etc/php/php.ini
+        - ${APP_CODE_PATH_HOST}/${PROJECT_BAGRTBOTTG}:${APP_CODE_PATH_CONTAINER}/${PROJECT_BAGRTBOTTG}${APP_CODE_CONTAINER_FLAG}
+        - docker-in-docker:/certs/client
         #overriding xdebug opts
         - ./xdebug.ini:/usr/local/etc/php/conf.d/z-xdebug.ini
       expose:
@@ -433,128 +463,20 @@ services:
       extra_hosts:
         - "dockerhost:${DOCKER_HOST_IP}"
       environment:
-        - PHP_IDE_CONFIG=serverName=${PROJECT_LARAVEL}-fpm
-        - DOCKER_HOST=tcp://docker-in-docker:2375
+        - PHP_IDE_CONFIG=serverName=${PROJECT_BAGRTBOTTG}-fpm
+        - DOCKER_HOST=tcp://docker-in-docker:2376
+        - DOCKER_TLS_VERIFY=1
+        - DOCKER_TLS_CERTDIR=/certs
+        - DOCKER_CERT_PATH=/certs/client
         - FAKETIME=${PHP_FPM_FAKETIME}
   #      depends_on:
-  #        - ${PROJECT_LARAVEL}
+  #        - ${PROJECT_BAGRTBOTTG}
       networks:
         - backend
       links:
         - docker-in-docker
 
-    dashboard:
-      build:
-        context: ./node
-        args:
-          - LARADOCK_NODE_VERSION=${PROJECT_DASHBOARD_NODE_VERSION}
-          - LARADOCK_NODE_PORT=${PROJECT_DASHBOARD_PORT}
-          - LARADOCK_NODE_PATH_HOST=${APP_CODE_PATH_HOST}/${PROJECT_DASHBOARD}
-      command: bash -c "npm install && npm start"
-      volumes:
-        - ${APP_CODE_PATH_HOST}/${PROJECT_DASHBOARD}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
-        - ${DATA_PATH_HOST}/${PROJECT_DASHBOARD}/node_modules:${APP_CODE_PATH_CONTAINER}/node_modules${APP_CODE_CONTAINER_FLAG}
-        - ${DATA_PATH_HOST}/${PROJECT_DASHBOARD}/build:${APP_CODE_PATH_CONTAINER}/build${APP_CODE_CONTAINER_FLAG}
-      ports:
-        - ${PROJECT_DASHBOARD_PORT_HOST}:${PROJECT_DASHBOARD_PORT}
-      networks:
-        - frontend
-
-  ### MariaDB ##############################################
-    mariadb:
-      build:
-        context: ./mariadb
-        args:
-          - http_proxy
-          - https_proxy
-          - no_proxy
-          - MARIADB_VERSION=${MARIADB_VERSION}
-      volumes:
-        - ${DATA_PATH_HOST}/mariadb:/var/lib/mysql
-        - ${MARIADB_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
-        - ${DUMPS_PATH}:/root/dumps
-      ports:
-        - "${MARIADB_PORT}:3306"
-      environment:
-        - TZ=${WORKSPACE_TIMEZONE}
-        - MYSQL_DATABASE=${MARIADB_DATABASE}
-        - MYSQL_USER=${MARIADB_USER}
-        - MYSQL_PASSWORD=${MARIADB_PASSWORD}
-        - MYSQL_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
-      networks:
-        - backend
-
-  ### PostgreSQL ###########################################
-    postgres:
-      build: ./postgres
-      volumes:
-        - ${DATA_PATH_HOST}/postgres:/var/lib/postgresql
-        - ${POSTGRES_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
-        - ${DUMPS_PATH}:/root/dumps
-      ports:
-        - "${POSTGRES_PORT}:5432"
-      environment:
-        - POSTGRES_DB=${POSTGRES_DB}
-        - POSTGRES_USER=${POSTGRES_USER}
-        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-        - GITLAB_POSTGRES_INIT=${GITLAB_POSTGRES_INIT}
-        - GITLAB_POSTGRES_USER=${GITLAB_POSTGRES_USER}
-        - GITLAB_POSTGRES_PASSWORD=${GITLAB_POSTGRES_PASSWORD}
-        - GITLAB_POSTGRES_DB=${GITLAB_POSTGRES_DB}
-        - JUPYTERHUB_POSTGRES_INIT=${JUPYTERHUB_POSTGRES_INIT}
-        - JUPYTERHUB_POSTGRES_USER=${JUPYTERHUB_POSTGRES_USER}
-        - JUPYTERHUB_POSTGRES_PASSWORD=${JUPYTERHUB_POSTGRES_PASSWORD}
-        - JUPYTERHUB_POSTGRES_DB=${JUPYTERHUB_POSTGRES_DB}
-        - SONARQUBE_POSTGRES_INIT=${SONARQUBE_POSTGRES_INIT}
-        - SONARQUBE_POSTGRES_DB=${SONARQUBE_POSTGRES_DB}
-        - SONARQUBE_POSTGRES_USER=${SONARQUBE_POSTGRES_USER}
-        - SONARQUBE_POSTGRES_PASSWORD=${SONARQUBE_POSTGRES_PASSWORD}
-        - POSTGRES_CONFLUENCE_INIT=${CONFLUENCE_POSTGRES_INIT}
-        - POSTGRES_CONFLUENCE_DB=${CONFLUENCE_POSTGRES_DB}
-        - POSTGRES_CONFLUENCE_USER=${CONFLUENCE_POSTGRES_USER}
-        - POSTGRES_CONFLUENCE_PASSWORD=${CONFLUENCE_POSTGRES_PASSWORD}
-      networks:
-        - backend
-
-  ### Redis ################################################
-    redis:
-      build: ./redis
-      volumes:
-        - ${DATA_PATH_HOST}/redis:/data
-      ports:
-        - "${REDIS_PORT}:6379"
-      networks:
-        - backend
-
-  ### Docker-in-Docker ################################################
-    docker-in-docker:
-      image: docker:dind
-      privileged: true
-      volumes:
-        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
-        - ${DATA_PATH_HOST}/dind:/var/lib/docker
-      expose:
-        - 2375
-      networks:
-        - backend
-
-  ### pgAdmin ##############################################
-    pgadmin:
-      image: dpage/pgadmin4:latest
-      environment:
-        - "PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}"
-        - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}"
-      ports:
-        - "${PGADMIN_PORT}:80"
-      volumes:
-        - ${DATA_PATH_HOST}/pgadmin:/var/lib/pgadmin
-      depends_on:
-        - postgres
-      networks:
-        - frontend
-        - backend
-
-    php-fpm:
+    php-fpm: #default
       build:
         context: ./php-fpm
         args:
@@ -620,7 +542,7 @@ services:
           - no_proxy
       volumes:
         - ./php-fpm/php${PHP_VERSION}.ini:/usr/local/etc/php/php.ini
-        - ${APP_CODE_PATH_HOST}/${PROJECT_DEFAULT}:${APP_CODE_PATH_CONTAINER}${PROJECT_DEFAULT_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
+        - ${APP_CODE_PATH_HOST}/${PROJECT_DEFAULT}:${APP_CODE_PATH_CONTAINER}/public${APP_CODE_CONTAINER_FLAG}
         - ./xdebug.ini:/usr/local/etc/php/conf.d/z-xdebug.ini
       expose:
         - "9000"
@@ -636,3 +558,115 @@ services:
         - backend
       links:
         - docker-in-docker
+
+    dashboard:
+      build:
+        context: ./node
+        args:
+          - LARADOCK_NODE_VERSION=${PROJECT_DASHBOARD_NODE_VERSION}
+          - LARADOCK_NODE_PORT=${PROJECT_DASHBOARD_PORT}
+          - LARADOCK_NODE_PATH_HOST=${APP_CODE_PATH_HOST}/${PROJECT_DASHBOARD}
+      command: bash -c "npm install && npm start"
+      volumes:
+        - ${APP_CODE_PATH_HOST}/${PROJECT_DASHBOARD}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+        - ${DATA_PATH_HOST}/${PROJECT_DASHBOARD}/node_modules:${APP_CODE_PATH_CONTAINER}/node_modules${APP_CODE_CONTAINER_FLAG}
+        - ${DATA_PATH_HOST}/${PROJECT_DASHBOARD}/build:${APP_CODE_PATH_CONTAINER}/build${APP_CODE_CONTAINER_FLAG}
+      ports:
+        - ${PROJECT_DASHBOARD_PORT_HOST}:${PROJECT_DASHBOARD_PORT}
+      networks:
+        - frontend
+
+  ### PostgreSQL ###########################################
+    postgres:
+      build:
+        context: ./postgres
+        args:
+          - POSTGRES_VERSION=${POSTGRES_VERSION}
+      volumes:
+        - ${DATA_PATH_HOST}/postgres:/var/lib/postgresql/data
+        - ${POSTGRES_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+      ports:
+        - "${POSTGRES_PORT}:5432"
+      environment:
+        - POSTGRES_DB=${POSTGRES_DB}
+        - POSTGRES_USER=${POSTGRES_USER}
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+        - GITLAB_POSTGRES_INIT=${GITLAB_POSTGRES_INIT}
+        - GITLAB_POSTGRES_USER=${GITLAB_POSTGRES_USER}
+        - GITLAB_POSTGRES_PASSWORD=${GITLAB_POSTGRES_PASSWORD}
+        - GITLAB_POSTGRES_DB=${GITLAB_POSTGRES_DB}
+        - JUPYTERHUB_POSTGRES_INIT=${JUPYTERHUB_POSTGRES_INIT}
+        - JUPYTERHUB_POSTGRES_USER=${JUPYTERHUB_POSTGRES_USER}
+        - JUPYTERHUB_POSTGRES_PASSWORD=${JUPYTERHUB_POSTGRES_PASSWORD}
+        - JUPYTERHUB_POSTGRES_DB=${JUPYTERHUB_POSTGRES_DB}
+        - SONARQUBE_POSTGRES_INIT=${SONARQUBE_POSTGRES_INIT}
+        - SONARQUBE_POSTGRES_DB=${SONARQUBE_POSTGRES_DB}
+        - SONARQUBE_POSTGRES_USER=${SONARQUBE_POSTGRES_USER}
+        - SONARQUBE_POSTGRES_PASSWORD=${SONARQUBE_POSTGRES_PASSWORD}
+        - POSTGRES_CONFLUENCE_INIT=${CONFLUENCE_POSTGRES_INIT}
+        - POSTGRES_CONFLUENCE_DB=${CONFLUENCE_POSTGRES_DB}
+        - POSTGRES_CONFLUENCE_USER=${CONFLUENCE_POSTGRES_USER}
+        - POSTGRES_CONFLUENCE_PASSWORD=${CONFLUENCE_POSTGRES_PASSWORD}
+      networks:
+        - backend
+
+  ### Redis ################################################
+    redis:
+      build: ./redis
+      volumes:
+        - ${DATA_PATH_HOST}/redis:/data
+      ports:
+        - "${REDIS_PORT}:6379"
+      networks:
+        - backend
+
+  ### Docker-in-Docker ################################################
+    docker-in-docker:
+      image: docker:19.03-dind
+      environment:
+        DOCKER_TLS_SAN: DNS:docker-in-docker
+      privileged: true
+      volumes:
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
+        - docker-in-docker:/certs/client
+      expose:
+        - 2375
+      networks:
+        - backend
+
+  ### pgAdmin ##############################################
+    pgadmin:
+      image: dpage/pgadmin4:latest
+      environment:
+        - "PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}"
+        - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}"
+      ports:
+        - "${PGADMIN_PORT}:80"
+      volumes:
+        - ${DATA_PATH_HOST}/pgadmin:/var/lib/pgadmin
+      depends_on:
+        - postgres
+      networks:
+        - frontend
+        - backend
+
+  ### Beanstalkd ###########################################
+    beanstalkd:
+      build: ./beanstalkd
+      ports:
+        - "${BEANSTALKD_HOST_PORT}:11300"
+      privileged: true
+      depends_on:
+        - php-fpm
+      networks:
+        - backend
+
+  ### TorProxy ##############################################
+    torproxy:
+      image: dperson/torproxy:latest
+      ports:
+        - "8118:8118"
+        - "9050:9050"
+        - "9051:9051"
+      networks:
+        - backend

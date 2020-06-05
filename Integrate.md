@@ -1,3 +1,4 @@
+
 # Integration
 Let's make dev env for project "`docker-multi`" with cloud public env.
 
@@ -147,7 +148,7 @@ sudo apt install -y docker-compose
 sudo groupadd docker
 sudo usermod -aG docker $USER
 sudo systemctl enable docker
-sudo /etc/init.d/docker start
+sudo service docker start
 ```
 
 - Now you must logout/login from console. Better is reboot OS after apt upgrade
@@ -157,7 +158,7 @@ sudo reboot
 - reconnect with last command `ssh $DOCKER_multi_IP`. repeat if OS not booted
 - check docker status (it's must auto-started): 
 ```bash
-/etc/init.d/docker status
+service docker status
 ```
 #### STEP 3: download `Laradock-Multi`
 
@@ -190,11 +191,11 @@ cat .keys/docker-multi.pub
 - copy your git-link
   - SSH URL is preferred for: private repo, local dev env, `Yandex Cloud` with deploy(read only) keys
     
-    example: `git@github.com:bagart/laradock-multi.git`
+    example: `git@github.com:bagart/bagrt.com.git`
 
   - HTTPS URL is preferred for open access for read only or git remote for push with deploy keys
     
-    example: `https://github.com/bagart/laradock-multi.git`
+    example: `https://github.com/bagart/bagrt.com.git`
   
   It's for clone/pull/push? by deploy keys. Or you need to generate a new ssh keys inside `docker-multi` _VM_ 
 
