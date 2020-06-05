@@ -1,12 +1,14 @@
 # [LaraDock](https://github.com/laradock/laradock) Multi
 Laradock wrapper template for running multiple related projects with different versions of PHP and Node.js such as Microservice Architecture (MSA)
 
-### Demo used 
-- [LaraDock](https://laradock.io/) without rewrite original files
-- [Laravel](https://laravel.com/) with `PHP 7.4`
-- [CoruUi](https://coreui.io/) as `Node.JS` example
-- [Microservice Architecture](https://en.wikipedia.org/wiki/Microservices) as concept
-- [Docker Compose](https://docs.docker.com/compose/) 
+### Bagrt.com services
+Official
+- [bagrt.com](https://bagrt.com/)
+- [bagrt-bot-tg.bagrt.com](https://bagrt-bot-tg.bagrt.com/)
+
+localhost on dev env
+- [localhost](http://localhost/)
+- [bagrt-bot-tg.localhost](http://bagrt-bot-tg.localhost/)
 
 ## Instruction for configure step-by-step
 - [Integrate](Integrate.md) Demo of usage with Cloud env (`Yandex Cloud` for example as simple and useful) 
@@ -20,14 +22,15 @@ Laradock wrapper template for running multiple related projects with different v
 - `cmd/rebuild.sh laravel-fpm nginx` rebuild only `laravel-fpm` and `nginx`
 - `cmd/stop.sh` - stop all services
 - `cmd/stop.sh nginx api` - stop services: `nginx` and `api`
+- `cmd/test_tor_proxy.sh` - test TOR proxy
 - `cmd/up.sh` - start all services
 - `cmd/up.sh nginx api` - start services: `nginx` and `api`
 
 ## Setup
 
-### Install Docker-CE with Docker-compose
+### Install Docker-CE with Docker-compose and git
 ```bash
-apt install docker docker-compose
+apt install docker docker-compose git
 ```
 ### Download Laradock-Multi with laradock
 ```bash
