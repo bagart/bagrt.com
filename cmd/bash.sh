@@ -20,5 +20,3 @@ docker-compose -f docker-compose.multi.yml up -d $SERVICE;
 docker-compose -f docker-compose.multi.yml exec $LOGIN $SERVICE $COMMAND;
 
 cd "${CUR_PATH}";
-
-

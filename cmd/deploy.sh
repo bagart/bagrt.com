@@ -1,6 +1,7 @@
 #!/bin/bash
 
-ssh-agent sh -c "ssh-add .keys/$(basename $(pwd)); git pull";
+ssh-agent sh -c "ssh-add .keys/$(basename $(pwd)); git fetch --all;git reset --hard origin/master";
+
 if [[ $1 == 'upgrade' || ! -d ./laradock ]]; then
   rm -rf ./laradock_new
   git clone https://github.com/Laradock/laradock.git ./laradock_new

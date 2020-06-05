@@ -39,7 +39,7 @@ services:
         # multi projects
         - ${APP_CODE_PATH_HOST}/${PROJECT_BAGRTBOTTG}${PROJECT_BAGRTBOTTG_WEB_ROOT}:${APP_CODE_PATH_CONTAINER}/${PROJECT_BAGRTBOTTG}${PROJECT_BAGRTBOTTG_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
         - ${APP_CODE_PATH_HOST}/${PROJECT_API}${PROJECT_API_WEB_ROOT}:${APP_CODE_PATH_CONTAINER}/${PROJECT_API}${PROJECT_API_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
-        - ${APP_CODE_PATH_HOST}/${PROJECT_DASHBOARD}${PROJECT_DASHBOARD_WEB_ROOT}:${APP_CODE_PATH_CONTAINER}/${PROJECT_DASHBOARD}${PROJECT_DASHBOARD_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
+#        - ${APP_CODE_PATH_HOST}/${PROJECT_DASHBOARD}${PROJECT_DASHBOARD_WEB_ROOT}:${APP_CODE_PATH_CONTAINER}/${PROJECT_DASHBOARD}${PROJECT_DASHBOARD_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
 
         # default php-fpm service. It's LaraDock depends by default
         - ${APP_CODE_PATH_HOST}/${PROJECT_DEFAULT}/${PROJECT_DEFAULT_WEB_ROOT}:/var/www/public/${PROJECT_DEFAULT_WEB_ROOT}${APP_CODE_CONTAINER_FLAG}
@@ -49,6 +49,10 @@ services:
         # defaults
         - ${NGINX_HOST_LOG_PATH}:/var/log/nginx
         - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+
+        - ${DATA_PATH_HOST}/certbot/certs/:/var/certs
+        - ${DATA_PATH_HOST}/certbot/letsencrypt/:/var/www/public/letsencrypt
+        - ${DATA_PATH_HOST}/certbot/letsencrypt/:/var/www/letsencrypt
       ports:
         - "${NGINX_HOST_HTTP_PORT}:80"
         - "${NGINX_HOST_HTTPS_PORT}:443"
@@ -56,7 +60,7 @@ services:
       depends_on:
         - ${PROJECT_BAGRTBOTTG}-fpm
         - ${PROJECT_API}-fpm
-        - ${PROJECT_DASHBOARD}
+#        - ${PROJECT_DASHBOARD}
         #use custom mount of /etc/nginx/sites-available for switch-off laradock php-fpm default container
         - php-fpm # default
       networks:
@@ -634,22 +638,6 @@ services:
       networks:
         - backend
 
-  ### pgAdmin ##############################################
-    pgadmin:
-      image: dpage/pgadmin4:latest
-      environment:
-        - "PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}"
-        - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}"
-      ports:
-        - "${PGADMIN_PORT}:80"
-      volumes:
-        - ${DATA_PATH_HOST}/pgadmin:/var/lib/pgadmin
-      depends_on:
-        - postgres
-      networks:
-        - frontend
-        - backend
-
   ### Beanstalkd ###########################################
     beanstalkd:
       build: ./beanstalkd
@@ -660,6 +648,20 @@ services:
         - php-fpm
       networks:
         - backend
+
+  ### Certbot #########################################
+    certbot:
+      build:
+        context: ./certbot
+      volumes:
+        - ${DATA_PATH_HOST}/certbot/certs/:/var/certs
+        - ${DATA_PATH_HOST}/certbot/letsencrypt/:/var/www/letsencrypt
+        - ${DATA_PATH_HOST}/certbot/letsencrypt/:/var/www/public/letsencrypt
+      environment:
+        - CN=bagrt.com
+        - EMAIL=baltaev.artur+certbot@gmail.com
+      networks:
+        - frontend
 
   ### TorProxy ##############################################
     torproxy:

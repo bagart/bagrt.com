@@ -255,14 +255,29 @@ rm ./laradock/env-example.orig
 
 - (optional) install Laravel or NodeJs service from [https://github.com/bagart/laradock-multi](https://github.com/bagart/laradock-multi) instruction 
 
-#### STEP 5: RUN
+#### STEP 6: install dependencies
+add deploy keys to https://github.com/bagart/bagrt-bot-tg/settings
+
+```bash
+ssh-keygen -f .keys/bagrt-bot-tg
+#check prermissions
+ls -la .keys
+echo ssh public deploy key for docker-multi is:
+cat .keys/bagrt-bot-tg.pub
+ssh-agent sh -c "ssh-add .keys/bagrt-bot-tg; git clone git@github.com:bagart/bagrt-bot-tg.git projects/bagrt-bot-tg"
+
+git clone git@github.com:bagart/bagart-landing.git
+
+
+```
+#### STEP 6: RUN
 - running default `laradock Multi` env
 ```bash
 cmd/up.sh
 ```
 It's take a time, space, traffic and other resource
 
-#### STEP 6: self check
+#### STEP 7: self check
 - check `Laradock Multi`
 ```bash
 cmd/ps.sh
@@ -338,7 +353,7 @@ Expect:
     <h1>Default project </h1>
 
 
-#### STEP 7: (optional) configure DNS ot /etc/hosts 
+#### STEP 8: (optional) configure DNS ot /etc/hosts 
 - for localhost you can use
 ```bash
 curl http://default.localhost
@@ -382,14 +397,20 @@ Expect:
     
     <h1>Api demo</h1>
 
-#### STEP 8: Add your custom repository
+#### STEP 9: composer install
+```bash
+cmd/bash.sh bagrt-bot-tg
+composer install
+```
+
+#### STEP 10: Add your custom repository
 Follow [https://github.com/bagart/laradock-multi](https://github.com/bagart/laradock-multi) instruction 
 
 There examples with `Laravel` and `CoreUI`/`Node.js` examples
 
-#### STEP 9: Configure HTTPS  
+#### STEP 11: Configure HTTPS
 
-#### STEP 10: push env changes to `docker-multi` repo
+#### STEP 12: push env changes to `docker-multi` repo
 For use `cmd/deploy.sh` script you must save all customization to `.laradock-multi` dir
 
 Or write your deploy tool for upgrade `Laradock Multi` or make it manual. 
