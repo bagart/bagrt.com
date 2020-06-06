@@ -1,4 +1,3 @@
-
 # Integration
 Let's make dev env for project "`docker-multi`" with cloud public env.
 
@@ -255,8 +254,9 @@ rm ./laradock/env-example.orig
 
 - (optional) install Laravel or NodeJs service from [https://github.com/bagart/laradock-multi](https://github.com/bagart/laradock-multi) instruction 
 
-#### STEP 6: install dependencies
-add deploy keys to https://github.com/bagart/bagrt-bot-tg/settings
+#### STEP 6: Prepare project git and deploy
+
+Generate deploy keys
 
 ```bash
 ssh-keygen -f .keys/bagrt-bot-tg
@@ -264,12 +264,22 @@ ssh-keygen -f .keys/bagrt-bot-tg
 ls -la .keys
 echo ssh public deploy key for docker-multi is:
 cat .keys/bagrt-bot-tg.pub
-ssh-agent sh -c "ssh-add .keys/bagrt-bot-tg; git clone git@github.com:bagart/bagrt-bot-tg.git projects/bagrt-bot-tg"
-
-git clone git@github.com:bagart/bagart-landing.git
-
-
 ```
+
+Optional: create deploy keys for protect your private developer keys with write permissions 
+Add deploy keys to each project as READ ONLY
+`cat .keys/laravel`
+https://github.com/bagart/bagrt-bot-tg/settings
+
+Download (clone) each project from git
+```bash
+ssh-agent sh -c "\
+    ssh-add .keys/bagrt-bot-tg; \
+    git clone git@github.com:bagart/bagrt-bot-tg.git projects/bagrt-bot-tg"
+
+git clone git@github.com:bagart/bagart-landing.git projects/landing
+```
+
 #### STEP 6: RUN
 - running default `laradock Multi` env
 ```bash
@@ -393,6 +403,7 @@ Expect:
 curl api.multi.bagrt.com
 ```
 open in browser: [http://api.multi.bagrt.com](http://api.multi.bagrt.com)
+
 Expect:
     
     <h1>Api demo</h1>
@@ -404,11 +415,40 @@ composer install
 ```
 
 #### STEP 10: Add your custom repository
-Follow [https://github.com/bagart/laradock-multi](https://github.com/bagart/laradock-multi) instruction 
+Follow [https://github.com/bagart/laradock-multi](https://github.com/bagart/laradock-multi) instruction
 
 There examples with `Laravel` and `CoreUI`/`Node.js` examples
 
 #### STEP 11: Configure HTTPS
+
+Commit changes.
+**WARNING! push any changes before deploy.**
+```bash
+git commit -m 'setup env'
+```
+
+Deploy will reset your repo to origin/master (git fetch+git reset)
+
+_Hint*_: For deploy without git update/reset
+
+```bash
+echo LARADOCK_DEV_VERSION=true >> .env
+```
+
+run on cloud server
+```bash
+cmd/deploy.sh
+
+# visual check certbot result
+cmd/logs.sh certbot-multi
+```
+ 
+It's will 
+- replace laradock config from `.laradock-multi/*` to `laravel/*`
+- create a new SSL certificate
+- run services
+
+check site https://bagrt.com and http://bagrt.com
 
 #### STEP 12: push env changes to `docker-multi` repo
 For use `cmd/deploy.sh` script you must save all customization to `.laradock-multi` dir
@@ -426,4 +466,5 @@ ssh-agent sh -c "ssh-add .keys/$(basename $(pwd)); git push";
 
 #### Important note:
 Please  use `cmd/deploy.sh` script carefully for protect your customization in `laradock` path.
+
 Upgrade option will remove your laradock dir!

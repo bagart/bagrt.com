@@ -1,8 +1,8 @@
 # [LaraDock](https://github.com/laradock/laradock) Multi
 Laradock wrapper template for running multiple related projects with different versions of PHP and Node.js such as Microservice Architecture (MSA)
 
-### Bagrt.com services
-Official
+## Bagrt.com services
+Public
 - [bagrt.com](https://bagrt.com/)
 - [bagrt-bot-tg.bagrt.com](https://bagrt-bot-tg.bagrt.com/)
 
