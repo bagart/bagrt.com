@@ -310,7 +310,7 @@ services:
         - ${POSTGRES_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
         - ${DUMPS_PATH}:/root/dumps
       ports:
-        - "${POSTGRES_PORT}:5432"
+        - "127.0.0.1:${POSTGRES_PORT}:5432"
       environment:
         - POSTGRES_DB=${POSTGRES_DB}
         - POSTGRES_USER=${POSTGRES_USER}
@@ -340,7 +340,7 @@ services:
       volumes:
         - ${DATA_PATH_HOST}/redis:/data
       ports:
-        - "${REDIS_PORT}:6379"
+        - "127.0.0.1:${REDIS_PORT}:6379"
       networks:
         - backend
 
@@ -471,7 +471,7 @@ services:
     beanstalkd:
       build: ./beanstalkd
       ports:
-        - "${BEANSTALKD_HOST_PORT}:11300"
+        - "127.0.0.1:${BEANSTALKD_HOST_PORT}:11300"
       privileged: true
       depends_on:
         - php-fpm
