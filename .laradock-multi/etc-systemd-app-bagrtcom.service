@@ -2,6 +2,7 @@
 #
 # sudo cp /app/bagrt.com/laradock/etc-systemd-app-bagrtcom.service /etc/systemd/system/app-bagrtcom.service
 # sudo systemctl enable app-bagrtcom
+# sudo systemctl enable docker
 
 [Unit]
 Description=BAGArt.com APP
