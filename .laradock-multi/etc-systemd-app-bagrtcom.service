@@ -1,0 +1,21 @@
+# system.d service: /etc/systemd/system/app-bagrtcom.service
+#
+# sudo cp /app/bagrt.com/laradock/etc-systemd-app-bagrtcom.service /etc/systemd/system/app-bagrtcom.service
+# sudo systemctl enable app-bagrtcom
+# sudo systemctl enable docker
+
+[Unit]
+Description=BAGArt.com APP
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/app/bagrt.com/laradock
+ExecStart=/usr/local/bin/docker-compose -f docker-compose.multi.yml up -d
+ExecStop=/usr/local/bin/docker-compose -f docker-compose.multi.yml down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
