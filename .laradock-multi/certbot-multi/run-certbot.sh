@@ -27,3 +27,4 @@ done
 
 echo   '============ STAT: exist certificates ======================'
 ls /var/certs/ | grep crt
+exit
