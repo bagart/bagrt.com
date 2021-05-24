@@ -382,7 +382,7 @@ services:
       image: docker:19.03-dind
       environment:
         DOCKER_TLS_SAN: DNS:docker-in-docker
-      privileged: true
+      privileged: false
       volumes:
         - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
         - docker-in-docker:/certs/client
@@ -516,7 +516,7 @@ services:
       build: ./beanstalkd
       ports:
         - "127.0.0.1:${BEANSTALKD_HOST_PORT}:11300"
-      privileged: true
+      privileged: false
       depends_on:
         - php-fpm
       networks:
